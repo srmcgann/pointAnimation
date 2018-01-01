@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body,html{
+        background:#000;
+        margin:0;
+        height:100vh;
+      }
+      #pointAnimationDiv{
+        width:100%;
+      }
+      .pointCanvas{
+        width:100%;
+        height:100vh;
+      }
+      canvas{
+        display:block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas class="pointCanvas" id="pointAnimation"></canvas>
+    <script>
+      function init(){
+        
+        v=[];
+        v.push({});
+        v[0].c = document.querySelector("#pointAnimation");
+        v[0].c.className = "pointCanvas";
+        v[0].x = v[0].c.getContext("2d");
+        v[0].c.style.height="500px";
+        v[0].c.width = v[0].c.clientWidth;
+        v[0].c.height = v[0].c.clientHeight;
+        v[0].c.style.height="100vh";
+        var cx=v[0].c.width/2, cy=v[0].c.height/2;
+        var vx,vy;
+        v[0].f=v[0].t=0;
+        v[0].p=[];
+        for(var i=0;i<150;++i){
+          vx=-.4+rand(i+1e3)*.8;
+          vy=-.4+rand(i+2e3)*.8;
+          v[0].p.push({x:-80+(cx*2+160)*rand(i),y:-80+(cy*2+160)*rand(i+3e3),vx,vy})
+        }
+
+        v.push({});
+        window.addEventListener("resize", function resize(){
+          init();
+          v[0].c.style.height="100vh";
+          v[0].c.width = v[0].c.clientWidth;
+          v[0].c.height = v[0].c.clientHeight;
+        }, true);
+      }
+      
+      function drawPointAnimation(){
+        
+        var c=v[0].c;
+        var x=v[0].x;
+        x.fillStyle="#000000";
+        x.fillRect(0,0,c.width,c.height);
+
+        var cx=c.width/2, cy=c.height/2;
+        var X1,Y1,X2,Y2;
+        v[0].f+=.7;
+        for(var i=0;i<cx*2+60;i+=15){
+          x.strokeStyle=`hsla(177,95%,60%,${i%60?.05:.10})`;
+          X1=-60+i+v[0].f;
+          Y1=0;
+          X2=X1;
+          Y2=cy*2;
+          x.beginPath();
+          x.moveTo(X1,Y1);
+          x.lineTo(X2,Y2);
+          x.stroke();
+        }
+        for(var i=0;i<cy*2+60;i+=15){
+          x.strokeStyle=`hsla(177,95%,60%,${.02+i%60/150})`;
+          X1=0;
+          Y1=-60+i;
+          X2=cx*2;
+          Y2=Y1;
+          x.beginPath();
+          x.moveTo(X1,Y1);
+          x.lineTo(X2,Y2);
+          x.stroke();
+        }
+        
+        var t=0,a;
+        for(var j=0;j<cx*2+60;j+=15){
+          for(var i=0;i<cy*2+60;i+=15){
+            a=rand(t-Math.round((cy*2+60)*4/15-cy%2+3)*v[0].t);
+            if(a&&a<.045){
+              x.fillStyle=`hsla(177,95%,60%,${a*3})`;
+              X1=-60+j+v[0].f;
+              Y1=-60+i;
+              x.fillRect(X1,Y1,15,15);
+            }
+            t++;
+          }
+        }
+
+        var d;
+        for(var i=0;i<v[0].p.length;++i){
+          v[0].p[i].x+=.7;
+          v[0].p[i].x+=v[0].p[i].vx;
+          v[0].p[i].y+=v[0].p[i].vy;
+          if(v[0].p[i].x>cx*2+80)v[0].p[i].x=-80;
+          if(v[0].p[i].y>cy*2+80)v[0].p[i].y=-80;
+          if(v[0].p[i].x<-80)v[0].p[i].x=cx*2+80;
+          if(v[0].p[i].y<-80)v[0].p[i].y=cy*2+80;
+          x1=v[0].p[i].x;
+          y1=v[0].p[i].y;
+          for(var j=0;j<v[0].p.length;++j){
+            if(i!=j){
+              x2=v[0].p[j].x;
+              y2=v[0].p[j].y;
+              d=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+              if(d<150){
+                x.beginPath();
+                x.moveTo(x1,y1);
+                x.lineTo(x2,y2);
+                x.lineWidth=1+10/(1+d/10);
+                x.strokeStyle=`hsla(177,100%,60%,${1 - Math.pow(d / 150, .85)})`;
+                x.stroke();
+              }
+            }
+          }
+        }
+        x.lineWidth=1;
+        
+        for(var i=0;i<v[0].p.length;++i){
+          x.beginPath();
+          x.arc(v[0].p[i].x,v[0].p[i].y,6,0,Math.PI*2);
+          x.fillStyle="#0ce5da";
+          x.globalAlpha=.2;
+          x.fill();
+          x.beginPath();
+          x.arc(v[0].p[i].x,v[0].p[i].y,3,0,Math.PI*2);
+          x.globalAlpha=.8;
+          x.fillStyle="#fff";
+          x.fill();
+        }
+        x.filter = 'none';
+        
+        if(v[0].f>60){
+          v[0].f=0;
+          v[0].t++;
+        }
+        
+        v[0].raf=requestAnimationFrame(()=>{drawPointAnimation(v)});
+      }
+
+      function rand(s){
+        return parseFloat('0.'+Math.sin(s+3e4).toString().substr(6));
+      }
+
+      window.onload = function(){
+        init();
+        drawPointAnimation();
+      }
+    </script>
+  </body>
+</html>
